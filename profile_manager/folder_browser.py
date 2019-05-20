@@ -1,4 +1,5 @@
 import os
+import re
 
 
 class EVEWalker:
@@ -43,13 +44,21 @@ class EVEWalker:
 
 
 class FolderInstall:
+    """
+    Class the represents the different installations within the game.
+    """
 
-    profiles_table = []
     ignored_folders = ['cache']
 
     def __init__(self, name, path):
+        """
+        Constructor for the installation class.
+        :param name: The name of the installation
+        :param path: The full path to the installation
+        """
         self.path = path
         self.name = name
+        self.profiles = {}
 
     def find_profiles(self):
         for folder in os.listdir(self.path):
@@ -65,7 +74,18 @@ class FolderInstall:
 
             temp = FolderProfiles(path, folder)
             temp.find_accounts()
-            self.profiles_table.append(temp)
+            self.profiles[folder] = temp
+
+    def get_install(self, text):
+        """
+        Returns the requested profile from the installation
+        :param text:
+        :return:
+        """
+        try:
+            return self.profiles[text]
+        except KeyError:
+            return None
 
     def is_folder_ignored(self, folder):
         """
@@ -78,28 +98,59 @@ class FolderInstall:
         else:
             return False
 
-    @property
-    def profiles(self):
-        return self.profiles_table
-
 
 class FolderProfiles:
+    """
+    Class that represent the different profiles that can be used to launch the game.
+    """
 
     users = []
     accounts = []
 
     def __init__(self, path, name):
+        """
+
+        :param path:
+        :param name:
+        """
         self.path = path
         self.name = name
 
     def find_accounts(self):
-        for folder in os.listdir(self.path):
-            path = os.path.join(self.path, folder)
+        for file in os.listdir(self.path):
+            path = os.path.join(self.path, file)
 
             if os.path.isdir(path):
                 continue  # Not a file, we don't care here
 
-            print('    {}'.format(folder))
+            acc_file = AccountFile(file, path)
+
+            if acc_file.is_account:
+                self.accounts.append(acc_file)
+
+            if acc_file.is_character:
+                self.users.append(acc_file)
+
+            print('    {}'.format(file))
+
+
+class AccountFile:
+
+    def __init__(self, name, path):
+        self.name = name
+        self.path = path
+
+    @property
+    def is_account(self):
+        if 'user' in self.name:
+            return True
+        return False
+
+    @property
+    def is_character(self):
+        if 'char' in self.name:
+            return True
+        return False
 
 
 class FolderModel:
@@ -107,14 +158,29 @@ class FolderModel:
     def __init__(self):
         self.installations = {}
 
+        # Active installations
+        self.active_origin_install = None
+        self.active_dest_install = None
+
+        # Active profiles
+        self.active_origin_profile = None
+        self.active_dest_profile = None
+
     def add_installation_directory(self, directory):
         self.installations[directory.name] = directory
 
     def get_install(self, text):
-        return self.installations[text]
+        try:
+            return self.installations[text]
+        except KeyError:
+            return None
 
-    def get_profile(self, install):
-        pass
+    def get_origin_profile(self):
+        try:
+            return self.active_origin_install
+        except KeyError:
+            return None
+
 
 
 
