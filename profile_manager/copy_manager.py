@@ -11,7 +11,10 @@ def copy_file(source_file, destination_file):
 
     :return:
     """
-    shutil.copyfile(source_file, destination_file, follow_symlinks=False)
+    try:
+        shutil.copyfile(source_file, destination_file, follow_symlinks=False)
+    except shutil.SameFileError:
+        pass  # Expected behavior
 
 
 def copy_files(source_file, destination_files):
