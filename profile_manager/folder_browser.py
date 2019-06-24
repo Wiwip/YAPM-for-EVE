@@ -1,12 +1,14 @@
+import logging
 import os
 import re
+import eve_utils as utils
 
 
 class EVEWalker:
 
     ignored_folder = ['Launcher', 'QtWebEngine', 'cache', 'Browser']
-    appdata = os.getenv('LOCALAPPDATA')
-    eve_path = '{}/CCP/EVE'.format(appdata)
+    appdata = utils.get_appdata()
+    eve_path = utils.get_eve_path()
 
     def __init__(self, model):
         self.model = model
@@ -76,7 +78,7 @@ class FolderInstall:
             temp.find_accounts()
             self.profiles[folder] = temp
 
-    def get_install(self, text):
+    def get_profile(self, text):
         """
         Returns the requested profile from the installation
         :param text:
@@ -104,8 +106,7 @@ class FolderProfiles:
     Class that represent the different profiles that can be used to launch the game.
     """
 
-    users = []
-    accounts = []
+    shared_queue = None
 
     def __init__(self, path, name):
         """
@@ -115,6 +116,8 @@ class FolderProfiles:
         """
         self.path = path
         self.name = name
+        self.users = []
+        self.accounts = []
 
     def find_accounts(self):
         for file in os.listdir(self.path):
@@ -129,6 +132,7 @@ class FolderProfiles:
                 self.accounts.append(acc_file)
 
             if acc_file.is_character:
+                self.shared_queue.put(acc_file.char_id)
                 self.users.append(acc_file)
 
             print('    {}'.format(file))
@@ -136,21 +140,44 @@ class FolderProfiles:
 
 class AccountFile:
 
+    names_dict = None
+
     def __init__(self, name, path):
-        self.name = name
+        self._fullname = name
         self.path = path
 
     @property
     def is_account(self):
-        if 'user' in self.name:
+        m = re.findall("core_user_(\d+)", self._fullname)
+        if m:
             return True
         return False
 
     @property
     def is_character(self):
-        if 'char' in self.name:
+        m = re.findall("core_char_(\d+)", self._fullname)
+        if m:
             return True
         return False
+
+    @property
+    def char_id(self):
+        try:
+            m = re.findall("\d+", self._fullname)
+            return m[0]
+        except IndexError:
+            pass
+        return self._fullname
+
+    @property
+    def name(self):
+        try:
+            return "{} ({})".format(self.names_dict[self.char_id], self.char_id)
+        except KeyError:
+            logging.warning("Character ID ({}) could not be found.".format(self._fullname))
+        except ValueError:
+            pass
+        return self._fullname
 
 
 class FolderModel:
@@ -165,6 +192,8 @@ class FolderModel:
         # Active profiles
         self.active_origin_profile = None
         self.active_dest_profile = None
+
+        self.character_names = None
 
     def add_installation_directory(self, directory):
         self.installations[directory.name] = directory

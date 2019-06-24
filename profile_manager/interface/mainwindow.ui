@@ -39,19 +39,6 @@
       <string>Copy</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="pushButtonRefresh">
-     <property name="geometry">
-      <rect>
-       <x>90</x>
-       <y>210</y>
-       <width>101</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Refresh</string>
-     </property>
-    </widget>
     <widget class="QListView" name="listViewDestinationAccounts">
      <property name="geometry">
       <rect>
@@ -62,7 +49,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QComboBox" name="comboBoxDestinationSettings">
+    <widget class="QComboBox" name="comboBoxDestinationProfiles">
      <property name="geometry">
       <rect>
        <x>420</x>
@@ -72,7 +59,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QComboBox" name="comboBoxDestinationSelection">
+    <widget class="QComboBox" name="comboBoxDestinationInstalls">
      <property name="geometry">
       <rect>
        <x>420</x>
@@ -82,7 +69,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QComboBox" name="comboBoxOriginSettings">
+    <widget class="QComboBox" name="comboBoxOriginProfiles">
      <property name="geometry">
       <rect>
        <x>90</x>
@@ -102,7 +89,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QComboBox" name="comboBoxOriginSelection">
+    <widget class="QComboBox" name="comboBoxOriginInstalls">
      <property name="geometry">
       <rect>
        <x>90</x>
@@ -112,7 +99,7 @@
       </rect>
      </property>
     </widget>
-    <widget class="QPushButton" name="pushButton">
+    <widget class="QPushButton" name="pushButtonSelectAll">
      <property name="geometry">
       <rect>
        <x>540</x>
@@ -125,7 +112,7 @@
       <string>Select All</string>
      </property>
     </widget>
-    <widget class="QPushButton" name="pushButton_2">
+    <widget class="QPushButton" name="pushButtonDeselectAll">
      <property name="geometry">
       <rect>
        <x>630</x>
@@ -188,6 +175,47 @@
      <height>21</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menuActions">
+    <property name="title">
+     <string>Actions</string>
+    </property>
+    <widget class="QMenu" name="menuRestore">
+     <property name="title">
+      <string>Restore</string>
+     </property>
+     <addaction name="actionRestore_Tranquility"/>
+     <addaction name="actionRestore_Singularity"/>
+     <addaction name="separator"/>
+     <addaction name="actionCustom"/>
+    </widget>
+    <widget class="QMenu" name="menuBackup">
+     <property name="title">
+      <string>Backup</string>
+     </property>
+     <addaction name="actionBackup_Tranquility"/>
+     <addaction name="actionBackup_Singularity"/>
+    </widget>
+    <addaction name="menuBackup"/>
+    <addaction name="separator"/>
+    <addaction name="menuRestore"/>
+    <addaction name="separator"/>
+    <addaction name="actionRefresh"/>
+   </widget>
+   <widget class="QMenu" name="menuUtilities">
+    <property name="title">
+     <string>Utilities</string>
+    </property>
+    <addaction name="actionOpen_EVE_data_location"/>
+   </widget>
+   <addaction name="menuFile"/>
+   <addaction name="menuActions"/>
+   <addaction name="menuUtilities"/>
   </widget>
   <widget class="QToolBar" name="mainToolBar">
    <attribute name="toolBarArea">
@@ -198,6 +226,46 @@
    </attribute>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
+  <action name="actionBackup_Tranquility">
+   <property name="text">
+    <string>Tranquility</string>
+   </property>
+  </action>
+  <action name="actionBackup_Singularity">
+   <property name="text">
+    <string>Singularity (Test Server)</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>Exit</string>
+   </property>
+  </action>
+  <action name="actionRefresh">
+   <property name="text">
+    <string>Refresh UI</string>
+   </property>
+  </action>
+  <action name="actionRestore_Tranquility">
+   <property name="text">
+    <string>Tranquility</string>
+   </property>
+  </action>
+  <action name="actionRestore_Singularity">
+   <property name="text">
+    <string>Singularity (Test Server)</string>
+   </property>
+  </action>
+  <action name="actionCustom">
+   <property name="text">
+    <string>Custom</string>
+   </property>
+  </action>
+  <action name="actionOpen_EVE_data_location">
+   <property name="text">
+    <string>Open EVE data location</string>
+   </property>
+  </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

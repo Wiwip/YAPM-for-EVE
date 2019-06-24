@@ -28,13 +28,14 @@ class AsyncCharacterQueries(Thread):
         self.query_engine = None
         self.query_list = shared_queue
         self.shared_dict = shared_dict
+
         self.running = True
+        self.setDaemon(True)
 
     def run(self) -> None:
         logging.info("Character query service started.")
         self.esi_core = EsiCore()
         self.query_engine = EsiQuery(self.esi_core)
-        time.sleep(10)
 
         try:
             while self.running:
