@@ -1,25 +1,26 @@
 import logging
 
 from PyQt5 import QtGui
-from PyQt5.QtGui import QWindow, QStandardItemModel, QStandardItem
+from PyQt5.QtCore import pyqtSlot
+from PyQt5.QtGui import QStandardItemModel, QStandardItem
 from PyQt5.QtWidgets import QMainWindow, QComboBox
 
 import copy_manager
-import eve_utils
-from folder_browser import FolderModel, FolderProfiles, AccountFile
-from interface.mainwindow import Ui_MainWindow
 import eve_backup
+from application import ProfileManager
+from folder_browser import FolderProfiles
+from interface.mainwindow import Ui_MainWindow
 
 
 class MainWindow(QMainWindow):
 
-    def __init__(self, model: FolderModel):
+    def __init__(self, manager: ProfileManager):
         QMainWindow.__init__(self)
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
 
-        self.model = model
+        self.manager = manager
 
         # Creates the model for the origin combobox list view
         self.OriginListInstallationModel = QStandardItemModel()
@@ -35,19 +36,21 @@ class MainWindow(QMainWindow):
     def refresh(self):
         self.populate_installations()
 
-        self.model.active_origin_install = self.model.get_install(str(self.ui.comboBoxOriginInstalls.currentText()))
-        self.model.active_dest_install = self.model.get_install(str(self.ui.comboBoxDestinationInstalls.currentText()))
+        self.manager.model.active_origin_install = self.manager.model.get_install(self.install_origin)
+        self.manager.model.active_dest_install = self.manager.model.get_install(self.install_destination)
 
         # Populate the profiles on refresh calls
-        self.populate_profiles(self.ui.comboBoxOriginProfiles, self.model.active_origin_profile)
-        self.populate_profiles(self.ui.comboBoxDestinationProfiles, self.model.active_dest_profile)
+        self.populate_profiles(self.ui.comboBoxOriginProfiles, self.manager.model.active_origin_install)
+        self.populate_profiles(self.ui.comboBoxDestinationProfiles, self.manager.model.active_origin_install)
+
+        self.manager.model.active_origin_profile = self.manager.model.active_origin_install.get_profile(self.profile_origin)
+        self.manager.model.active_dest_profile = self.manager.model.active_dest_install.get_profile(self.profile_destination)
 
         # Populate the user accounts on refresh calls)
-        self.populate_accounts(self.OriginListInstallationModel, self.model.active_origin_profile)
-        self.populate_accounts(self.DestinationListInstallationModel, self.model.active_dest_profile, checked=True)
+        self.populate_accounts(self.OriginListInstallationModel, self.manager.model.active_origin_profile)
+        self.populate_accounts(self.DestinationListInstallationModel, self.manager.model.active_dest_profile, checkable=True)
 
     def connect_all(self):
-
         # Callback for installations
         self.ui.comboBoxOriginInstalls.currentIndexChanged.connect(self.origin_install_combo_callback)
         self.ui.comboBoxDestinationInstalls.currentIndexChanged.connect(self.dest_install_combo_callback)
@@ -58,13 +61,11 @@ class MainWindow(QMainWindow):
 
         self.ui.actionBackup_Tranquility.triggered.connect(self.backup_tranquility)
         self.ui.actionRestore_Tranquility.triggered.connect(self.restore_tranquility)
-
         self.ui.pushButtonCopy.clicked.connect(self.copy_cb)
-
         self.ui.actionRefresh.triggered.connect(self.refresh)
-
         self.ui.pushButtonSelectAll.clicked.connect(self.select_all)
         self.ui.pushButtonDeselectAll.clicked.connect(self.deselect_all)
+        self.manager.char_name_svc.notify_update.connect(self.on_char_updates)
 
     def quit(self):
         pass
@@ -77,13 +78,13 @@ class MainWindow(QMainWindow):
         Populates the combobox listing the installations
         :return:
         """
-        remember_origin = self.ui.comboBoxOriginInstalls.currentText()
-        remember_destination = self.ui.comboBoxDestinationInstalls.currentText()
+        remember_origin = self.install_origin
+        remember_destination = self.install_destination
 
         self.ui.comboBoxOriginInstalls.clear()
         self.ui.comboBoxDestinationInstalls.clear()
 
-        for i in self.model.installations:
+        for i in self.manager.model.installations:
             self.ui.comboBoxOriginInstalls.addItem(i)
             self.ui.comboBoxDestinationInstalls.addItem(i)
 
@@ -99,31 +100,29 @@ class MainWindow(QMainWindow):
 
     def origin_install_combo_callback(self, i):
         try:
-            self.model.active_origin_install = self.model.get_install(str(self.ui.comboBoxOriginInstalls.currentText()))
-            self.populate_profiles(self.ui.comboBoxOriginProfiles, self.model.active_origin_install)
+            self.manager.model.active_origin_install = self.manager.model.get_install(self.install_origin)
+            self.populate_profiles(self.ui.comboBoxOriginProfiles, self.manager.model.active_origin_install)
         except AttributeError:
             pass
 
     def dest_install_combo_callback(self, i):
         try:
-            self.model.active_dest_install = self.model.get_install(str(self.ui.comboBoxDestinationInstalls.currentText()))
-            self.populate_profiles(self.ui.comboBoxDestinationProfiles, self.model.active_dest_install)
+            self.manager.model.active_dest_install = self.manager.model.get_install(self.install_destination)
+            self.populate_profiles(self.ui.comboBoxDestinationProfiles, self.manager.model.active_dest_install)
         except AttributeError:
             pass
 
     def origin_profile_combo_callback(self, i):
         try:
-            self.model.active_origin_profile = self.model.active_origin_install.get_profile(
-                self.ui.comboBoxOriginProfiles.currentText())
-            self.populate_accounts(self.OriginListInstallationModel, self.model.active_origin_profile)
+            self.manager.model.active_origin_profile = self.manager.model.active_origin_install.get_profile(self.profile_origin)
+            self.populate_accounts(self.OriginListInstallationModel, self.manager.model.active_origin_profile)
         except AttributeError:
             pass
 
     def dest_profile_combo_callback(self, i):
         try:
-            self.model.active_dest_profile = self.model.active_dest_install.get_profile(
-                self.ui.comboBoxDestinationProfiles.currentText())
-            self.populate_accounts(self.DestinationListInstallationModel, self.model.active_dest_profile, checked=True)
+            self.manager.model.active_dest_profile = self.manager.model.active_dest_install.get_profile(self.profile_destination)
+            self.populate_accounts(self.DestinationListInstallationModel, self.manager.model.active_dest_profile, checkable=True)
         except AttributeError:
             pass
 
@@ -148,7 +147,7 @@ class MainWindow(QMainWindow):
         except AttributeError as e:
             print("No profile selected. {}".format(e))
 
-    def populate_accounts(self, list_model: QStandardItemModel, active_profile: FolderProfiles, checked=False):
+    def populate_accounts(self, list_model: QStandardItemModel, active_profile: FolderProfiles, checkable=False):
         """
         The methods updates the lists in the combobox for both origin and destination settings.
         :param active_profile: The active profile where we'll get the user list to populate
@@ -161,7 +160,7 @@ class MainWindow(QMainWindow):
         try:
             for i in active_profile.users:
                 item = QStandardItem(i.name)
-                item.setCheckable(checked)
+                item.setCheckable(checkable)
                 item.setEditable(False)
                 item.setData(i)
                 list_model.appendRow(item)
@@ -202,5 +201,24 @@ class MainWindow(QMainWindow):
 
         copy_manager.copy_files(origin_character, dest_files)
 
+    @pyqtSlot()
+    def on_char_updates(self):
+        self.refresh()
+
+    @property
+    def install_origin(self):
+        return str(self.ui.comboBoxOriginInstalls.currentText())
+
+    @property
+    def install_destination(self):
+        return str(self.ui.comboBoxDestinationInstalls.currentText())
+
+    @property
+    def profile_origin(self):
+        return str(self.ui.comboBoxOriginProfiles.currentText())
+
+    @property
+    def profile_destination(self):
+        return str(self.ui.comboBoxDestinationProfiles.currentText())
 
 
