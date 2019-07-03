@@ -23,7 +23,11 @@ class MainWindow(QMainWindow):
         self.manager = manager
 
         # Creates the model for the origin combobox list view
+        self.install_dropdown_model = QStandardItemModel()
+        self.profile_dropdown_model = QStandardItemModel()
         self.OriginListInstallationModel = QStandardItemModel()
+        self.ui.comboBoxOriginInstalls.setModel(self.install_dropdown_model)
+        # self.ui.comboBoxOriginProfiles.setModel(self.profile_origin)
         self.ui.listViewOriginAccounts.setModel(self.OriginListInstallationModel)
 
         # Creates the model for the destination combobox list view
@@ -67,12 +71,6 @@ class MainWindow(QMainWindow):
         self.ui.pushButtonDeselectAll.clicked.connect(self.deselect_all)
         self.manager.char_name_svc.notify_update.connect(self.on_char_updates)
 
-    def quit(self):
-        pass
-
-    def closeEvent(self, a0: QtGui.QCloseEvent) -> None:
-        pass
-
     def populate_installations(self):
         """
         Populates the combobox listing the installations
@@ -85,8 +83,10 @@ class MainWindow(QMainWindow):
         self.ui.comboBoxDestinationInstalls.clear()
 
         for i in self.manager.model.installations:
-            self.ui.comboBoxOriginInstalls.addItem(i)
-            self.ui.comboBoxDestinationInstalls.addItem(i)
+            item = QStandardItem(i)
+            item.setData(self.manager.model.installations[i])
+            self.install_dropdown_model.appendRow(item)
+            self.ui.comboBoxDestinationInstalls.addItem(i)  # TODO
 
         # Restore the index if the text still exists
         index = self.ui.comboBoxOriginInstalls.findText(remember_origin)

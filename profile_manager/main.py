@@ -8,7 +8,7 @@ from interface.mainwindow_implementation import MainWindow
 
 
 def main():
-    logging.basicConfig(format='%(levelname)s| %(message)s', level=logging.DEBUG)
+    logging.basicConfig(format='%(levelname)s | %(message)s', level=logging.DEBUG)
 
     # Creates the application
     manager = ProfileManager()
