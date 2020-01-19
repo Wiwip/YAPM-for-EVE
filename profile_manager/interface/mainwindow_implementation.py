@@ -1,4 +1,5 @@
 import logging
+import subprocess
 
 from PyQt5 import QtGui
 from PyQt5.QtCore import pyqtSlot
@@ -7,6 +8,7 @@ from PyQt5.QtWidgets import QMainWindow, QComboBox
 
 import copy_manager
 import eve_backup
+from eve_utils import get_eve_path
 from application import ProfileManager
 from folder_browser import FolderProfiles
 from interface.mainwindow import Ui_MainWindow
@@ -65,6 +67,7 @@ class MainWindow(QMainWindow):
 
         self.ui.actionBackup_Tranquility.triggered.connect(self.backup_tranquility)
         self.ui.actionRestore_Tranquility.triggered.connect(self.restore_tranquility)
+        self.ui.actionOpen_EVE_data_location.triggered.connect(self.open_eve_folder)
         self.ui.pushButtonCopy.clicked.connect(self.copy_cb)
         self.ui.actionRefresh.triggered.connect(self.refresh)
         self.ui.pushButtonSelectAll.clicked.connect(self.select_all)
@@ -200,6 +203,9 @@ class MainWindow(QMainWindow):
                 dest_files.append(item.data().path)
 
         copy_manager.copy_files(origin_character, dest_files)
+
+    def open_eve_folder(self):
+        subprocess.Popen(r'explorer /select,"{}"'.format(get_eve_path()))
 
     @pyqtSlot()
     def on_char_updates(self):
