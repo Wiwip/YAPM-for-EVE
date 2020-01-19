@@ -1,10 +1,14 @@
 import logging
 import os
-import re
 import eve_utils as utils
+import data
 
 
-class EVEWalker:
+class ServerDiscoverer:
+    """
+    This is the main class of the model builder mechanism.
+    - Finds the installations in the EVE path
+    """
 
     ignored_folder = ['Launcher', 'QtWebEngine', 'cache', 'Browser', 'LauncherCrashes']
     appdata = utils.get_appdata()
@@ -25,9 +29,11 @@ class EVEWalker:
 
             print(folder)
 
-            temp = FolderInstall(folder, path)
-            temp.find_profiles()
-            self.model.add_installation_directory(temp)
+            profiles = ProfileDiscoverer(folder, path).find_profiles()
+
+            # Add the Server to the model
+            server = data.Server(folder, path, profiles)
+            self.model.add_server(server)
 
     def is_folder_ignored(self, folder):
         """
@@ -45,9 +51,10 @@ class EVEWalker:
         return os.walk(self.eve_path)
 
 
-class FolderInstall:
+class ProfileDiscoverer:
     """
     Class the represents the different installations within the game.
+    - Singularity/tranquility/serenity
     """
 
     ignored_folders = ['cache']
@@ -60,9 +67,10 @@ class FolderInstall:
         """
         self.path = path
         self.name = name
-        self.profiles = {}
 
     def find_profiles(self):
+        profiles = {}
+
         for folder in os.listdir(self.path):
             path = os.path.join(self.path, folder)
 
@@ -74,20 +82,10 @@ class FolderInstall:
 
             print('  {}'.format(folder))
 
-            temp = FolderProfiles(path, folder)
-            temp.find_accounts()
-            self.profiles[folder] = temp
+            chars = CharacterDiscoverer(path, folder).find_characters()
+            profiles[folder] = data.Profile(path, folder, chars)
 
-    def get_profile(self, text):
-        """
-        Returns the requested profile from the installation
-        :param text:
-        :return:
-        """
-        try:
-            return self.profiles[text]
-        except KeyError:
-            return None
+        return profiles
 
     def is_folder_ignored(self, folder):
         """
@@ -101,7 +99,7 @@ class FolderInstall:
             return False
 
 
-class FolderProfiles:
+class CharacterDiscoverer:
     """
     Class that represent the different profiles that can be used to launch the game.
     """
@@ -116,78 +114,42 @@ class FolderProfiles:
         """
         self.path = path
         self.name = name
-        self.users = []
-        self.accounts = []
+        self.accounts = []  # TODO Refactor
 
-    def find_accounts(self):
+    def find_characters(self):
+        chars = []
+
         for file in os.listdir(self.path):
             path = os.path.join(self.path, file)
 
             if os.path.isdir(path):
                 continue  # Not a file, we don't care here
 
-            acc_file = AccountFile(file, path)
+            acc_file = data.Account(file, path)
 
             if acc_file.is_account:
                 self.accounts.append(acc_file)
 
             if acc_file.is_character:
                 self.shared_queue.put(acc_file.char_id)
-                self.users.append(acc_file)
+                chars.append(acc_file)
 
             print('    {}'.format(file))
 
-
-class AccountFile:
-
-    names_dict = None
-
-    def __init__(self, name, path):
-        self._fullname = name
-        self.path = path
-
-    @property
-    def is_account(self):
-        m = re.findall("core_user_(\d+)", self._fullname)
-        if m:
-            return True
-        return False
-
-    @property
-    def is_character(self):
-        m = re.findall("core_char_(\d+)", self._fullname)
-        if m:
-            return True
-        return False
-
-    @property
-    def char_id(self):
-        try:
-            m = re.findall("\d+", self._fullname)
-            return m[0]
-        except IndexError:
-            pass
-        return self._fullname
-
-    @property
-    def name(self):
-        try:
-            return "{} ({})".format(self.names_dict[self.char_id], self.char_id)
-        except KeyError:
-            logging.warning("Character ID ({}) could not be found.".format(self._fullname))
-        except ValueError:
-            pass
-        return self._fullname
+        return chars
 
 
-class FolderModel:
+class ApplicationModel:
+    """
+    Stores out data structures and keeps updated information on what is currently selected or active
+    """
 
     def __init__(self):
-        self.installations = {}
+        self.servers = {}
 
         # Active installations
-        self.active_origin_install = None
-        self.active_dest_install = None
+        self.active_origin_server = None
+        self.active_dest_server = None
 
         # Active profiles
         self.active_origin_profile = None
@@ -195,25 +157,15 @@ class FolderModel:
 
         self.character_names = None
 
-    def add_installation_directory(self, directory):
-        self.installations[directory.name] = directory
+    def add_server(self, server):
+        self.servers[server.name] = server
 
-    def get_install(self, text):
+    def get_server(self, server):
         try:
-            return self.installations[text]
+            return self.servers.get(server, self.servers["d_eve_sharedcache_tq_tranquility"])
         except KeyError:
             return None
 
-    def get_origin_profile(self):
-        try:
-            return self.active_origin_install
-        except KeyError:
-            return None
-
-
-
-
-
-
-
+    def get_default_server(self):
+        return self.get_server(None)
 

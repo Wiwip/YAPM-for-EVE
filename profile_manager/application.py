@@ -1,7 +1,8 @@
 from queue import Queue
 
+import data
 from esi.esi_queries import AsyncCharacterQueries
-from folder_browser import AccountFile, FolderProfiles, FolderModel, EVEWalker
+from folder_browser import CharacterDiscoverer, ApplicationModel, ServerDiscoverer
 
 
 class ProfileManager:
@@ -16,15 +17,15 @@ class ProfileManager:
         self.shared_queue = Queue()
         self.shared_dict = {}
 
-        AccountFile.names_dict = self.shared_dict
-        FolderProfiles.shared_queue = self.shared_queue
+        data.Account.names_dict = self.shared_dict
+        CharacterDiscoverer.shared_queue = self.shared_queue
 
         # Creates the model shared by all the app to share relevant data.
-        self.model = FolderModel()
+        self.model = ApplicationModel()
         self.model.character_names = self.shared_dict
 
         # Creates the folder walker that will find relevant folders and files
-        self.walker = EVEWalker(self.model)
+        self.walker = ServerDiscoverer(self.model)
         self.walker.generate()
 
         # Starts the character names query
