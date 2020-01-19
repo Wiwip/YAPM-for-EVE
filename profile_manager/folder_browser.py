@@ -6,7 +6,7 @@ import eve_utils as utils
 
 class EVEWalker:
 
-    ignored_folder = ['Launcher', 'QtWebEngine', 'cache', 'Browser']
+    ignored_folder = ['Launcher', 'QtWebEngine', 'cache', 'Browser', 'LauncherCrashes']
     appdata = utils.get_appdata()
     eve_path = utils.get_eve_path()
 
