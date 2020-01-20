@@ -162,10 +162,15 @@ class ApplicationModel:
 
     def get_server(self, server):
         try:
-            return self.servers.get(server, self.servers["d_eve_sharedcache_tq_tranquility"])
+            return self.servers[server]
         except KeyError:
-            return None
+            return self.get_default_server()
 
     def get_default_server(self):
-        return self.get_server(None)
+        """
+        Returns the first server that has the string 'tranquility' in it.
+        :return:
+        """
+        server = [value for key, value in self.servers.items() if 'tranquility' in key.lower()][0]
+        return server
 

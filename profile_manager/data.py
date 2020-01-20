@@ -65,6 +65,7 @@ class Profile:
     def __str__(self):
         return self.name
 
+
 class Account:
     """
     Data object that contains all the information required for accounts/characters files.
