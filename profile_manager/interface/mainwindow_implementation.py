@@ -236,13 +236,13 @@ class MainWindow(QMainWindow):
         dest_files = []
 
         origin = self.account_origin_model.itemFromIndex(self.ui.listViewOriginAccounts.currentIndex())
-        origin_character = origin.data().path
+        origin_character = origin.data(QtCore.Qt.UserRole).path
         logging.info("Copying users using source {} character".format(origin_character))
 
         for i in range(self.account_dest_model.rowCount()):
             item = self.account_dest_model.item(i)
             if item.checkState():
-                dest_files.append(item.data().path)
+                dest_files.append(item.data(QtCore.Qt.UserRole).path)
 
         copy_manager.copy_files(origin_character, dest_files)
 

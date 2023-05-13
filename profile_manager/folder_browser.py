@@ -1,4 +1,4 @@
-import logging
+
 import os
 import eve_utils as utils
 import data
@@ -10,7 +10,7 @@ class ServerDiscoverer:
     - Finds the installations in the EVE path
     """
 
-    ignored_folder = ['Launcher', 'QtWebEngine', 'cache', 'Browser', 'LauncherCrashes']
+    ignored_folder = ['Launcher', 'QtWebEngine', 'cache', 'Browser', 'LauncherCrashes', 'Installer']
     appdata = utils.get_appdata()
     eve_path = utils.get_eve_path()
 

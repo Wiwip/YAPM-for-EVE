@@ -1,9 +1,7 @@
-import logging
 import sys
 
+from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import pyqtProperty, QCoreApplication, QObject, QUrl
-from PyQt5.QtQml import qmlRegisterType, QQmlComponent, QQmlApplicationEngine
 
 from application import ProfileManager
 from interface.mainwindow_implementation import MainWindow
