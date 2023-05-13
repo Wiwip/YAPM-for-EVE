@@ -4,7 +4,7 @@ import subprocess
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtGui import QStandardItemModel, QStandardItem
-from PyQt5.QtWidgets import QMainWindow, QComboBox
+from PyQt5.QtWidgets import QMainWindow, QComboBox, QMessageBox
 
 import copy_manager
 import data
@@ -245,6 +245,7 @@ class MainWindow(QMainWindow):
                 dest_files.append(item.data(QtCore.Qt.UserRole).path)
 
         copy_manager.copy_files(origin_character, dest_files)
+        self.showConfirm()
 
     def open_eve_folder(self):
         subprocess.Popen(r'explorer /select,"{}"'.format(get_eve_path()))
@@ -257,3 +258,12 @@ class MainWindow(QMainWindow):
     def on_char_updates(self):
         # self.reset_models()
         self.refresh()
+
+    def showConfirm(self):
+        msgBox = QMessageBox()
+        msgBox.setIcon(QMessageBox.Information)
+        msgBox.setText("Profile Copied")
+        msgBox.setWindowTitle("It worked!")
+        msgBox.setStandardButtons(QMessageBox.Ok)
+
+        msgBox.exec()

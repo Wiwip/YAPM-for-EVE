@@ -1,5 +1,6 @@
 import sys
 
+import logging
 from PyQt5.QtQml import QQmlApplicationEngine
 from PyQt5.QtWidgets import QApplication
 
